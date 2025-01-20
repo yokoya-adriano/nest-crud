@@ -9,8 +9,6 @@ export class QuestionsService {
     private readonly prisma: PrismaService;
 
     async create(createQuestionDto: CreateQuestionDto, req: any) {
-        console.log(req);
-
         try {
             await this.prisma.questions.create({
                 data: { ...createQuestionDto, userId: req.sub.sub },
