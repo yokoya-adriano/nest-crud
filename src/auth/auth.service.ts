@@ -4,19 +4,25 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
-import { UserService } from 'src/user/user.service';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from 'src/database/prisma.service';
 
 @Injectable()
 export class AuthService {
     @Inject()
-    private readonly userService: UserService;
+    private readonly prisma: PrismaService;
+
+    @Inject()
+    private readonly jwtService: JwtService;
 
     async signin(
         params: Prisma.UserCreateInput,
-    ): Promise<Omit<User, 'password'>> {
-        const user = await this.userService.user({ email: params.email });
+    ): Promise<{ access_token: string }> {
+        const user = await this.prisma.user.findUnique({
+            where: { email: params.email },
+        });
         if (!user) throw new NotFoundException('User not found');
 
         const isPasswordValid = await bcrypt.compare(
@@ -26,9 +32,8 @@ export class AuthService {
         if (!isPasswordValid)
             throw new UnauthorizedException('Invalid credentials');
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password, ...userData } = user;
+        const payload = { sub: user.id };
 
-        return userData;
+        return { access_token: await this.jwtService.signAsync(payload) };
     }
 }

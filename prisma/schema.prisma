@@ -22,6 +22,7 @@ model User {
   updatedAt DateTime @updatedAt
   questions     Questions[]
   answers       Answers[]
+  posts Post[]
 }
 
 model Questions {
@@ -44,4 +45,13 @@ model Answers {
   questionId Int
   user      User     @relation(fields: [userId], references: [id])
   question  Questions @relation(fields: [questionId], references: [id])
+}
+
+model Post {
+  id        Int      @default(autoincrement()) @id
+  title     String
+  content   String?
+  published Boolean? @default(false)
+  userId  Int
+  author    User    @relation(fields: [userId], references: [id])
 }
